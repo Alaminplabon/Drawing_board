@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= @board.name %></title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+      body {
+          font-family: Arial, sans-serif;
+          background-color: #f9f9f9;
+          margin: 0;
+          padding: 20px;
+          background: linear-gradient(to bottom, #f9f9f9, #e6e6e6);
+      }
+      h1 {
+          text-align: center;
+          color: #333;
+          margin-bottom: 20px;
+          font-size: 36px; /* Increase font size */
+          text-transform: uppercase; /* Convert text to uppercase */
+          letter-spacing: 2px; /* Add some letter spacing */
+          text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Add a subtle text shadow */
+      }
+      #drawing-area {
+          width: 100%;
+          height: 70vh;
+          border: 5px solid #45a049;
+          border-radius: 8px;
+          overflow: hidden;
+          position: relative;
+          margin-bottom: 20px;
+      }
+      #canvas {
+          width: 100%;
+          height: 100%;
+      }
+      #tools-bar {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+          background-color: #f5f5f5;
+          padding: 10px 0;
+          border-bottom: 2px solid #ccc;
+      }
+      .tool {
+          cursor: pointer;
+          margin: 0 10px;
+          font-size: 24px;
+          color: #666;
+          transition: color 0.3s ease;
+      }
+      .tool:hover {
+          color: #333;
+      }
+      form {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap;
+      }
+      label {
+          font-size: 18px;
+          margin-right: 10px;
+          color: #333;
+      }
+      select, input[type="color"], input[type="submit"] {
+          margin-bottom: 10px;
+          padding: 8px;
+          font-size: 16px;
+          border: none;
+          border-radius: 4px;
+      }
+      input[type="color"] {
+          width: 50px;
+      }
+      input[type="submit"] {
+          background-color: #4CAF50;
+          color: white;
+          cursor: pointer;
+          transition: background-color 0.3s ease;
+      }
+      input[type="submit"]:hover {
+          background-color: #45a049;
+          transform: scale(1.1); /* Example scale effect */
+      }
+      input[type="submit"]:hover {
+          background-color: #45a049;
+      }
+  </style>
+</head>
+<body>
+<h1><%= @board.name %></h1>
+
+<div id="drawing-area">
+  <!-- Drawing canvas goes here -->
+  <canvas id="canvas"></canvas>
+</div>
+
+<div id="tools-bar">
+  <div class="tool" id="pencil-tool"><i class="fas fa-pencil-alt"></i></div>
+  <div class="tool" id="eraser-tool"><i class="fas fa-eraser"></i></div>
+  <div class="tool" id="rectangle-tool"><i class="far fa-square"></i></div>
+  <div class="tool" id="circle-tool"><i class="far fa-circle"></i></div>
+  <!-- Add more tools here as needed -->
+</div>
+
+<%= form_with(model: Drawing.new, url: board_drawings_path(@board), local: true, id: 'drawing-form') do |form| %>
+  <%= form.hidden_field :x, id: 'drawing_x' %>
+  <%= form.hidden_field :y, id: 'drawing_y' %>
+
+  <label for="drawing_tool">Select a tool:</label>
+  <%= form.select :tool, options_for_select(["Pencil", "Eraser", "Rectangle", "Circle"]), { prompt: "Choose a tool" }, id: 'drawing_tool' %>
+
+  <%= form.color_field :color, id: 'drawing_color' %>
+  <%= form.submit "Draw", id: 'draw_button' %>
+<% end %>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const tools = {
+            pencil: 'Pencil',
+            eraser: 'Eraser',
+            rectangle: 'Rectangle',
+            circle: 'Circle'
+        };
+
+        let currentTool = tools.pencil; // Default tool
+
+        // Tool selection event listeners
+        $('.tool').on('click', function() {
+            $('.tool').removeClass('active');
+            $(this).addClass('active');
+            currentTool = $(this).attr('id').split('-')[0];
+        });
+
+        // Canvas click event listener
+        canvas.addEventListener('click', function(event) {
+            const x = event.offsetX;
+            const y = event.offsetY;
+
+            // Handle different tools
+            if (currentTool === tools.circle) {
+                const radius = 20; // Set circle radius
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = $('#drawing_color').val();
+                ctx.fill();
+            } else if (currentTool === tools.rectangle) {
+                const width = 40; // Set rectangle width
+                const height = 20; // Set rectangle height
+                ctx.fillStyle = $('#drawing_color').val();
+                ctx.fillRect(x - width / 2, y - height / 2, width, height);
+            }
+        });
+    });
+</script>
+</body>
+</html>
